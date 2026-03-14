@@ -1,6 +1,8 @@
 import logging
 from datetime import datetime, timezone
 
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
 from sqlalchemy.orm import Session
 
 from rag_bot.db.models import Document
@@ -112,3 +114,16 @@ async def sync_drive() -> dict:
                 logger.exception("Error deleting %s", doc.filename)
 
     return result
+
+
+def start_scheduler() -> AsyncIOScheduler:
+    scheduler = AsyncIOScheduler()
+    scheduler.add_job(
+        sync_drive,
+        trigger=CronTrigger(day_of_week="sun", hour=2),
+        id="weekly_sync",
+        replace_existing=True,
+    )
+    scheduler.start()
+    logger.info("Scheduler started: sync_drive every Sunday at 02:00")
+    return scheduler
