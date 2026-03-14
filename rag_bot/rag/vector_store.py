@@ -36,6 +36,11 @@ class VectorStore:
                     size=VECTOR_SIZE, distance=Distance.COSINE
                 ),
             )
+        self._client.create_payload_index(
+            collection_name=COLLECTION,
+            field_name="topic",
+            field_schema="keyword",
+        )
 
     def add_documents(self, chunks: list[Document], vectors: list[list[float]]) -> None:
         self._ensure_collection()

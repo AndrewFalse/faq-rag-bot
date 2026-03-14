@@ -20,9 +20,10 @@ def _index_file(
     store: VectorStore,
     file_id: str,
     filename: str,
+    mime_type: str,
     topic: str,
 ) -> None:
-    path = drive.download_file(file_id, dest_path="")
+    path = drive.download_file(file_id, filename, mime_type)
     try:
         chunks = parse_document(path, topic, file_id)
         vectors = embedder.embed_documents(
@@ -60,7 +61,7 @@ async def sync_drive() -> dict:
         for file_id in drive_ids - db_ids:
             info = drive_files[file_id]
             try:
-                _index_file(drive, store, file_id, info["name"], info["topic"])
+                _index_file(drive, store, file_id, info["name"], info["mimeType"], info["topic"])
                 session.add(Document(
                     drive_file_id=file_id,
                     filename=info["name"],
@@ -85,7 +86,7 @@ async def sync_drive() -> dict:
                 continue
             try:
                 store.delete_by_file_id(file_id)
-                _index_file(drive, store, file_id, info["name"], info["topic"])
+                _index_file(drive, store, file_id, info["name"], info["mimeType"], info["topic"])
                 doc.filename = info["name"]
                 doc.topic = info["topic"]
                 doc.modified_time = info["modifiedTime"]
@@ -127,3 +128,11 @@ def start_scheduler() -> AsyncIOScheduler:
     scheduler.start()
     logger.info("Scheduler started: sync_drive every Sunday at 02:00")
     return scheduler
+
+
+if __name__ == "__main__":
+    import asyncio
+
+    logging.basicConfig(level=logging.INFO)
+    result = asyncio.run(sync_drive())
+    print(f"Синхронизация завершена: {result}")

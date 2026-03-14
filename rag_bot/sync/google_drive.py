@@ -12,15 +12,11 @@ ALLOWED_MIME_TYPES = {
     "application/pdf",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     "text/plain",
+    "application/vnd.google-apps.document",
 }
 
 FOLDER_MIME = "application/vnd.google-apps.folder"
-
-GOOGLE_DOCS_EXPORT_MAP: dict[str, tuple[str, str]] = {
-    "application/vnd.google-apps.document": ("application/pdf", ".pdf"),
-    "application/vnd.google-apps.spreadsheet": ("application/pdf", ".pdf"),
-    "application/vnd.google-apps.presentation": ("application/pdf", ".pdf"),
-}
+GOOGLE_DOCS_MIME = "application/vnd.google-apps.document"
 
 TMP_DIR = Path("/tmp/rag_docs")
 
@@ -98,29 +94,19 @@ class GoogleDriveClient:
 
         return result
 
-    def download_file(self, file_id: str, dest_path: str) -> str:
+    def download_file(self, file_id: str, filename: str, mime_type: str) -> str:
         TMP_DIR.mkdir(parents=True, exist_ok=True)
 
-        meta = (
-            self._service.files()
-            .get(fileId=file_id, fields="name, mimeType")
-            .execute()
-        )
-        mime = meta["mimeType"]
-        name = meta["name"]
-
-        export = GOOGLE_DOCS_EXPORT_MAP.get(mime)
-        if export:
-            export_mime, ext = export
-            if not name.endswith(ext):
-                name += ext
+        if mime_type == GOOGLE_DOCS_MIME:
             request = self._service.files().export_media(
-                fileId=file_id, mimeType=export_mime
+                fileId=file_id,
+                mimeType="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             )
+            out_path = TMP_DIR / f"{file_id}.docx"
         else:
             request = self._service.files().get_media(fileId=file_id)
+            out_path = TMP_DIR / filename
 
-        out_path = TMP_DIR / name
         with open(out_path, "wb") as fh:
             downloader = MediaIoBaseDownload(fh, request)
             done = False
