@@ -1,0 +1,7 @@
+[build]
+  builder = "nixpacks"
+
+[deploy]
+  startCommand = "python -m rag_bot.main"
+  healthcheckPath = "/health"
+  restartPolicyType = "on_failure"

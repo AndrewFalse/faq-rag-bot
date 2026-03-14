@@ -1,0 +1,7 @@
+.env
+__pycache__/
+*.pyc
+rag_bot.db
+/tmp/
+*.json
+.idea/

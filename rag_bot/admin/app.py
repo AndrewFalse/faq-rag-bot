@@ -32,6 +32,11 @@ def check_auth(
     return credentials.username
 
 
+@app.get("/health")
+async def health() -> dict:
+    return {"status": "ok"}
+
+
 @app.get("/admin/", response_class=HTMLResponse)
 async def admin_index(
     request: Request,
