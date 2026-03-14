@@ -22,6 +22,7 @@ class Settings:
     QDRANT_API_KEY: str = ""
     GOOGLE_SERVICE_ACCOUNT_JSON: str = ""
     GOOGLE_DRIVE_ROOT_FOLDER_ID: str = ""
+    OPENROUTER_API_KEY: str = ""
     ADMIN_PASSWORD: str = ""
 
     @classmethod
@@ -33,6 +34,7 @@ class Settings:
             QDRANT_API_KEY=_require("QDRANT_API_KEY"),
             GOOGLE_SERVICE_ACCOUNT_JSON=_require("GOOGLE_SERVICE_ACCOUNT_JSON"),
             GOOGLE_DRIVE_ROOT_FOLDER_ID=_require("GOOGLE_DRIVE_ROOT_FOLDER_ID"),
+            OPENROUTER_API_KEY=_require("OPENROUTER_API_KEY"),
             ADMIN_PASSWORD=_require("ADMIN_PASSWORD"),
         )
 

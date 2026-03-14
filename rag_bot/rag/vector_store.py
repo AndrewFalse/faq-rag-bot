@@ -14,7 +14,7 @@ from qdrant_client.models import (
 from rag_bot.config import settings
 
 COLLECTION = "rag_documents"
-VECTOR_SIZE = 1024
+VECTOR_SIZE = 4096
 
 
 class VectorStore:
@@ -23,6 +23,7 @@ class VectorStore:
             url=settings.QDRANT_URL,
             api_key=settings.QDRANT_API_KEY,
         )
+        self._ensure_collection()
 
     def _ensure_collection(self) -> None:
         collections = [
@@ -66,6 +67,10 @@ class VectorStore:
         topic: str,
         top_k: int = 5,
     ) -> list[Document]:
+        info = self._client.get_collection(COLLECTION)
+        if info.points_count == 0:
+            return []
+
         query_filter = None
         if topic != "ALL":
             query_filter = Filter(
@@ -83,18 +88,13 @@ class VectorStore:
             limit=top_k,
         ).points
 
-        return [
-            Document(
-                page_content=hit.payload["text"],
-                metadata={
-                    "topic": hit.payload.get("topic", ""),
-                    "source": hit.payload.get("source", ""),
-                    "drive_file_id": hit.payload.get("drive_file_id", ""),
-                    "score": hit.score,
-                },
-            )
-            for hit in hits
-        ]
+        results = []
+        for hit in hits:
+            results.append(Document(
+                page_content=hit.payload.get("text", ""),
+                metadata=hit.payload,
+            ))
+        return results
 
     def delete_by_file_id(self, drive_file_id: str) -> None:
         self._client.delete(
